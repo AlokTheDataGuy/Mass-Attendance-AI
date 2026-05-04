@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – AttendanceAI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Welcome back — here's your overview{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat">
+    <div class="stat-icon ic-blue">👥</div>
+    <div>
+      <div class="stat-num">{{ total_students }}</div>
+      <div class="stat-lbl">Registered Students</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon ic-green">✅</div>
+    <div>
+      <div class="stat-num">{{ today_attendance }}</div>
+      <div class="stat-lbl">Present Today</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon ic-purple">📅</div>
+    <div>
+      <div class="stat-num">{{ total_days }}</div>
+      <div class="stat-lbl">Days Recorded</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon ic-orange">📷</div>
+    <div>
+      <div class="stat-num" id="pctEl">—</div>
+      <div class="stat-lbl">Avg Attendance %</div>
+    </div>
+  </div>
+</div>
+
+<!-- Pipelines -->
+<div class="grid-2 mb-3">
+
+  <a href="/register" class="pipeline-card">
+    <div class="pipeline-icon pi-blue">👤</div>
+    <h3>Pipeline 1 · Register Student</h3>
+    <p>Enroll a new student by entering their details and capturing face samples through the webcam. Five samples are auto-captured for reliable recognition.</p>
+    <div class="pipeline-step">
+      <span>Fill in name, roll number &amp; class</span>
+      <span>Auto-capture 5 face samples from webcam</span>
+      <span>Face vectors saved to database</span>
+    </div>
+    <div class="mt-2">
+      <span class="btn btn-primary btn-sm">Open Pipeline →</span>
+    </div>
+  </a>
+
+  <a href="/attendance" class="pipeline-card">
+    <div class="pipeline-icon pi-green">📷</div>
+    <h3>Pipeline 2 · Take Attendance</h3>
+    <p>Point the camera at the class. All enrolled students are recognised instantly in a single frame — mark attendance for everyone with one click.</p>
+    <div class="pipeline-step">
+      <span>Live camera detects all faces simultaneously</span>
+      <span>Names &amp; roll numbers overlay in real-time</span>
+      <span>One click marks the whole class</span>
+    </div>
+    <div class="mt-2">
+      <span class="btn btn-success btn-sm">Open Pipeline →</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- Recent Attendance -->
+<div class="card">
+  <div class="card-head">
+    <h3>Recent Attendance</h3>
+    <a href="/records" class="btn btn-ghost btn-sm">View All →</a>
+  </div>
+  <div class="card-body" style="padding:0">
+    {% if recent %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Roll</th>
+            <th>Class</th>
+            <th>Date</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent %}
+          <tr>
+            <td style="font-weight:600">{{ r.name }}</td>
+            <td><span class="badge badge-info">{{ r.roll }}</span></td>
+            <td><span class="badge badge-gray">{{ r.class }}</span></td>
+            <td style="font-size:13px">{{ r.date }}</td>
+            <td style="font-size:13px;color:var(--text-2)">{{ r.time }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="ei">📋</div>
+      <h3>No attendance recorded yet</h3>
+      <p>Register students and use Pipeline 2 to take your first attendance.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Compute avg attendance % from server data
+(async function(){
+  try {
+    const [students, records] = await Promise.all([
+      fetch('/api/students').then(r=>r.json()),
+      fetch('/api/attendance').then(r=>r.json())
+    ]);
+    if(!students.length){ document.getElementById('pctEl').textContent='0%'; return; }
+    const dates = [...new Set(records.map(r=>r.date))];
+    if(!dates.length){ document.getElementById('pctEl').textContent='0%'; return; }
+    const pct = Math.round(records.length / (students.length * dates.length) * 100);
+    document.getElementById('pctEl').textContent = pct+'%';
+  } catch(e){ document.getElementById('pctEl').textContent='—'; }
+})();
+</script>
+{% endblock %}

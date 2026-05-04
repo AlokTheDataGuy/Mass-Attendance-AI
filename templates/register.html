@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Register Student – AttendanceAI{% endblock %}
+{% block page_title %}Register Student{% endblock %}
+{% block page_sub %}Pipeline 1 — Enroll a new student with face data{% endblock %}
+
+{% block head %}
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="alert alert-info" id="modelAlert" style="display:none">
+  ⚠ Face models not found. Please run <strong>python setup_models.py</strong> in the terminal, then refresh this page.
+</div>
+
+<div class="grid-reg">
+
+  <!-- ── Left: Camera Column ── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <div class="card">
+      <div class="card-head">
+        <h3>📷 Webcam — Face Capture</h3>
+        <span class="badge badge-info" id="sampleCountBadge">0 / 5 samples</span>
+      </div>
+      <div class="card-body">
+
+        <!-- Camera view -->
+        <div class="cam-wrap" id="camWrap">
+          <video id="regVideo" autoplay muted playsinline style="display:none"></video>
+          <canvas id="regCanvas"></canvas>
+
+          <!-- Face guide oval -->
+          <div class="cam-guide" id="camGuide"></div>
+
+          <!-- Placeholder -->
+          <div class="cam-placeholder" id="camPlaceholder">
+            <div class="cam-icon">📷</div>
+            <p>Camera will start here</p>
+            <p class="text-xs text-muted">Allow camera access when prompted</p>
+          </div>
+
+          <!-- Status pill -->
+          <div class="cam-status" id="camStatus" style="display:none"></div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="mt-2 flex items-center gap-3">
+          <div class="progress" style="flex:1">
+            <div class="progress-bar" id="capProg" style="width:0%"></div>
+          </div>
+          <span class="text-xs text-muted" id="capCount">0/5</span>
+        </div>
+
+        <!-- Sample thumbnails -->
+        <div class="samples" id="sampleSlots"></div>
+
+        <!-- Camera controls -->
+        <div id="camControls" class="flex gap-2 mt-3" style="display:none!important">
+          <button class="btn btn-outline btn-sm" id="manualBtn" title="Capture now">📸 Capture Now</button>
+          <button class="btn btn-ghost btn-sm" id="retakeBtn">↩ Retake All</button>
+        </div>
+
+        <div class="mt-3">
+          <button class="btn btn-primary w-full" id="startCamBtn">
+            🎥 Start Camera &amp; Begin Capture
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="card">
+      <div class="card-head"><h3>ℹ How Capture Works</h3></div>
+      <div class="card-body text-sm text-muted" style="display:flex;flex-direction:column;gap:6px">
+        <p>→ Look directly at the camera with good lighting.</p>
+        <p>→ Keep your face inside the oval guide.</p>
+        <p>→ 5 samples are captured automatically (800 ms apart).</p>
+        <p>→ Each sample extracts a 128-dimensional face vector.</p>
+        <p>→ All vectors are stored — the best match is used during recognition.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Right: Student Details ── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <div class="card">
+      <div class="card-head"><h3>👤 Student Details</h3></div>
+      <div class="card-body">
+
+        <div class="form-group">
+          <label class="form-label" for="stuName">Full Name *</label>
+          <input type="text" id="stuName" placeholder="e.g. Rahul Sharma" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="stuRoll">Roll Number *</label>
+          <input type="text" id="stuRoll" placeholder="e.g. CS2024001" autocomplete="off">
+          <div class="form-hint">Must be unique across all students.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="stuClass">Class / Section *</label>
+          <input type="text" id="stuClass" placeholder="e.g. 10-A or B.Tech-CSE-3" autocomplete="off">
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Readiness indicator -->
+        <div id="readinessPanel" style="margin-bottom:14px">
+          <div class="flex items-center gap-2 mb-1">
+            <span id="r1" style="font-size:18px">⬜</span>
+            <span class="text-sm">Name, roll &amp; class filled</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="r2" style="font-size:18px">⬜</span>
+            <span class="text-sm">All 5 face samples captured</span>
+          </div>
+        </div>
+
+        <button class="btn btn-success btn-lg w-full" id="registerBtn" disabled>
+          ✅ Register Student
+        </button>
+
+        <div class="mt-2 text-xs text-muted text-center">
+          Complete both steps above to enable registration.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Registered students mini list -->
+    <div class="card">
+      <div class="card-head">
+        <h3>Recently Registered</h3>
+        <a href="/records" class="btn btn-ghost btn-sm">Records →</a>
+      </div>
+      <div id="recentStudents" class="card-body" style="padding:10px 14px;max-height:280px;overflow-y:auto">
+        <div class="text-xs text-muted text-center" style="padding:10px">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/register.js"></script>
+{% endblock %}

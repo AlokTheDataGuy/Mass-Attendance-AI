@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Take Attendance – AttendanceAI{% endblock %}
+{% block page_title %}Take Attendance{% endblock %}
+{% block page_sub %}Pipeline 2 — Recognise multiple students simultaneously{% endblock %}
+
+{% block head %}
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="alert alert-info" id="modelAlert" style="display:none">
+  ⚠ Face models not found. Run <strong>python setup_models.py</strong> then refresh.
+</div>
+
+<div class="grid-att">
+
+  <!-- ── Left: Camera ── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <div class="card">
+      <div class="card-head">
+        <h3>📷 Live Camera Feed</h3>
+        <div class="flex gap-2 items-center">
+          <span class="badge badge-gray" id="faceCountBadge">0 faces</span>
+          <span class="badge badge-success hidden" id="runningBadge">● Live</span>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- Camera view with canvas overlay -->
+        <div class="cam-wrap" id="camWrap" style="aspect-ratio:16/9">
+          <video id="attVideo" autoplay muted playsinline style="display:none"></video>
+          <canvas id="attCanvas"></canvas>
+
+          <div class="cam-placeholder" id="attPlaceholder">
+            <div class="cam-icon">🎓</div>
+            <p>Point camera at the class</p>
+            <p class="text-xs text-muted">Multiple faces detected simultaneously</p>
+          </div>
+
+          <div class="cam-status" id="attStatus" style="display:none"></div>
+        </div>
+
+        <!-- Controls under camera -->
+        <div id="attControls" class="flex gap-2 mt-3" style="display:none!important">
+          <button class="btn btn-outline" id="snapBtn" title="Freeze and detect all faces in current frame">
+            📸 Snap &amp; Detect
+          </button>
+          <button class="btn btn-ghost btn-sm" id="stopBtn">⏹ Stop</button>
+        </div>
+
+        <div class="mt-3">
+          <button class="btn btn-primary w-full btn-lg" id="startCamBtn">
+            🎥 Start Camera &amp; Begin Detection
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-head"><h3>⚙ Recognition Settings</h3></div>
+      <div class="card-body">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Match Threshold:
+            <strong id="threshVal">0.50</strong>
+            <span class="text-xs text-muted">(lower = stricter)</span>
+          </label>
+          <input type="range" id="threshRange" min="0.3" max="0.7" step="0.01" value="0.50">
+          <div class="flex justify-between text-xs text-muted mt-1">
+            <span>0.30 (very strict)</span>
+            <span>0.70 (lenient)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Right: Detected + Mark ── -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Detected Students <span class="badge badge-info" id="detCount">0</span></h3>
+      </div>
+      <div class="card-body" style="padding:12px 14px;max-height:340px;overflow-y:auto">
+        <div id="detectedList">
+          <div class="empty">
+            <div class="ei">👥</div>
+            <p>Start the camera to begin detection</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>📋 Mark Attendance</h3></div>
+      <div class="card-body">
+        <p class="text-sm text-muted mb-3">
+          All students currently visible in the camera will be marked present for today.
+        </p>
+        <button class="btn btn-success btn-lg w-full" id="markBtn" disabled>
+          ✅ Mark Attendance for All Detected
+        </button>
+        <div class="mt-2 text-xs text-muted text-center" id="lastMarked"></div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="card">
+      <div class="card-head"><h3>💡 Tips</h3></div>
+      <div class="card-body text-sm text-muted" style="display:flex;flex-direction:column;gap:5px">
+        <p>→ Use <strong>Snap &amp; Detect</strong> for a still group photo analysis.</p>
+        <p>→ Ensure good, even lighting on all faces.</p>
+        <p>→ Lower threshold catches more faces but may misidentify.</p>
+        <p>→ Duplicate attendance on the same day is blocked automatically.</p>
+        <p>→ View &amp; export records on the <a href="/records" style="color:var(--primary)">Records</a> page.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/attendance.js"></script>
+{% endblock %}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AttendanceAI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">👁</div>
+    <div class="brand-text">
+      <h1>AttendanceAI</h1>
+      <p>Facial Recognition</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a href="/"          class="nav-item {% if page=='dashboard'  %}active{% endif %}"><span class="nav-icon">📊</span> Dashboard</a>
+
+    <div class="nav-section">Pipelines</div>
+    <a href="/register"  class="nav-item {% if page=='register'   %}active{% endif %}"><span class="nav-icon">👤</span> Register Student</a>
+    <a href="/attendance"class="nav-item {% if page=='attendance' %}active{% endif %}"><span class="nav-icon">📷</span> Take Attendance</a>
+
+    <div class="nav-section">Data</div>
+    <a href="/records"   class="nav-item {% if page=='records'    %}active{% endif %}"><span class="nav-icon">📋</span> Attendance Records</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="model-badge" id="modelBadge">
+      <div class="dot dot-spin" id="modelDot"></div>
+      <span id="modelTxt">Checking models…</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+      <div class="topbar-sub">{% block page_sub %}{% endblock %}</div>
+    </div>
+    <div class="topbar-clock" id="clockEl"></div>
+  </header>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<!-- ── Toasts ── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ── Clock ── */
+(function tick(){
+  const n = new Date();
+  const el = document.getElementById('clockEl');
+  if(el) el.textContent =
+    n.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
+    +' · '+n.toLocaleTimeString('en-IN');
+  setTimeout(tick,1000);
+})();
+
+/* ── Toast ── */
+function showToast(msg, type='info', ms=3500){
+  const icons={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  const map={success:'ts',error:'te',info:'ti',warning:'tw'};
+  const t=document.createElement('div');
+  t.className=`toast ${map[type]||'ti'}`;
+  t.innerHTML=`<span class="toast-icon">${icons[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},ms);
+}
+
+/* ── Model status check ── */
+fetch('/api/models/status').then(r=>r.json()).then(d=>{
+  const dot=document.getElementById('modelDot');
+  const txt=document.getElementById('modelTxt');
+  dot.className='dot '+(d.ready?'dot-ok':'dot-err');
+  txt.textContent=d.ready?'Models ready':'Run setup_models.py';
+}).catch(()=>{
+  document.getElementById('modelTxt').textContent='Server error';
+});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
