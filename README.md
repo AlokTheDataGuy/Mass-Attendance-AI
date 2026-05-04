@@ -133,6 +133,56 @@ Model weights are downloaded once by `setup_models.py` (~18 MB total) and served
 
 ---
 
+## Honest Limitations
+
+This system is designed to be deployable on any existing school laptop with zero cost. That trade-off has real constraints worth understanding before you run it in a classroom.
+
+**What works reliably:**
+- Groups of **5–15 students** standing within 2–3 metres of the camera, good frontal lighting
+- **Snap & Detect** mode for a still group photo — one thorough pass is more accurate than the live loop
+- Controlled environments: a lab, a seminar room, students queuing at a desk
+
+**Where it breaks down:**
+
+| Limitation | Root cause | Practical impact |
+|---|---|---|
+| **Faces far from the camera** | SSD MobileNet V1 accuracy drops sharply for faces smaller than ~80 px in the frame | Back-row students in a 60-seat hall will be missed or misidentified |
+| **Side profiles and downward-facing heads** | Registration captures frontal faces only; the recognition net is sensitive to pose angle | Students looking at their desks, or turned sideways, will not match |
+| **Laptop webcam field of view** | A standard built-in webcam covers ~60–70°, not a full classroom | You can only reliably capture the students directly in front of you |
+| **Backlit or shadowed faces** | Uneven lighting changes descriptor values enough to exceed the match threshold | Students near windows or in dark corners will fail to match |
+| **CPU speed at scale** | Each detected face is compared against all stored descriptors (N faces × S students × 5 descriptors) | Smooth up to ~15 simultaneous faces; noticeable lag beyond 25–30 |
+| **Threshold sensitivity** | A single global threshold applies to all students and lighting conditions | Lower threshold → fewer false positives but more missed students; higher → more matches but more wrong ones |
+
+---
+
+## Hardware Requirements
+
+| | Minimum (works, with limits) | Recommended (comfortable classroom use) |
+|---|---|---|
+| **CPU** | Intel Core i5 (8th gen) / Ryzen 5 | Intel Core i7 (10th gen+) / Ryzen 7 |
+| **RAM** | 4 GB | 8 GB |
+| **Camera** | Built-in laptop webcam (720p) | External USB webcam — 1080p, wide-angle (90°+), e.g. Logitech C920 (~₹4,000) |
+| **Lighting** | Overhead fluorescent — acceptable | Diffused front lighting; avoid strong backlighting from windows |
+| **Browser** | Any Chromium-based browser (Chrome, Edge) | Google Chrome — best WebAssembly / TF.js performance |
+| **Internet** | Required once (model download ~18 MB) | Not required after setup |
+| **GPU** | Not required | Not required — all inference runs on CPU via TF.js WASM |
+| **OS** | Windows 10+ · macOS 12+ · Ubuntu 20.04+ | Same |
+
+---
+
+## Practical Workarounds for Larger Classes
+
+If you need to cover more students than a laptop webcam comfortably handles, these approaches work without changing any code:
+
+- **Row-by-row batching** — have students approach in groups of 10–15, click Snap & Detect once per group, then Mark Attendance. Takes ~2 minutes for 60 students instead of 10.
+- **Dedicated wide-angle USB camera** — a 1080p 90° webcam (₹3,000–5,000) roughly triples the usable capture area and resolves the FOV bottleneck.
+- **Dedicated lighting** — a single clip-on LED ring light (~₹800) facing the students eliminates the backlit-window problem entirely.
+- **Threshold tuning** — if your room has consistent lighting, lower the threshold to 0.40 for stricter matching; raise to 0.60 if students are farther away and you're getting too many misses.
+
+**When this architecture is the wrong tool:** a full lecture hall of 200+ students filmed from a podium requires server-side inference (YOLOv8-face + ArcFace on a basic GPU), a high-resolution IP camera, and frame preprocessing to upscale small face crops before descriptor extraction. The browser-side approach here is the correct trade-off for *free, zero-setup, privacy-preserving* deployment in small-to-medium classrooms — not for stadium-scale attendance.
+
+---
+
 ## Quick Start
 
 **Prerequisites:** Python 3.9+ · A webcam · Any modern browser (Chrome / Edge recommended)
