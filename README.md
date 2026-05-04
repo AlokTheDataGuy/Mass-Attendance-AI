@@ -1,7 +1,7 @@
 <<<<<<< HEAD
 <div align="center">
 
-  <h1>👁 AttendanceAI</h1>
+  <h1>👁 Mass Attendance AI</h1>
 
   <p><strong>A browser-native facial recognition attendance system that replaces manual roll-calls with a single camera frame — detecting, identifying, and marking every student in the room simultaneously, with no server GPU, no paid APIs, and no heavy Python dependencies.</strong></p>
 
